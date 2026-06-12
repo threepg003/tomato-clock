@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>番茄时钟</title>
+    <style>
+        :root {
+            --work-color: #e74c3c;
+            --work-light: #fdecea;
+            --break-color: #2ecc71;
+            --break-light: #e8f8f0;
+            --bg: #f0f2f5;
+            --card-bg: #ffffff;
+            --text: #2c3e50;
+            --text-secondary: #7f8c8d;
+            --radius: 20px;
+            --shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: var(--bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 50px 60px;
+            text-align: center;
+            width: 420px;
+            transition: background 0.5s;
+        }
+
+        .card.working {
+            background: var(--work-light);
+        }
+
+        .card.breaking {
+            background: var(--break-light);
+        }
+
+        .status {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+            color: var(--text-secondary);
+        }
+
+        .status.working {
+            color: var(--work-color);
+        }
+
+        .status.breaking {
+            color: var(--break-color);
+        }
+
+        .timer-ring-wrapper {
+            position: relative;
+            width: 260px;
+            height: 260px;
+            margin: 0 auto 30px;
+        }
+
+        .timer-ring {
+            transform: rotate(-90deg);
+            width: 260px;
+            height: 260px;
+        }
+
+        .ring-bg {
+            fill: none;
+            stroke: #ecf0f1;
+            stroke-width: 8;
+        }
+
+        .ring-progress {
+            fill: none;
+            stroke: var(--work-color);
+            stroke-width: 8;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.3s linear, stroke 0.5s;
+        }
+
+        .ring-progress.breaking {
+            stroke: var(--break-color);
+        }
+
+        .time-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 56px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            font-family: "SF Mono", "Fira Code", "Cascadia Code", "JetBrains Mono", Consolas, monospace;
+            color: var(--text);
+            letter-spacing: 2px;
+        }
+
+        .pomodoro-count {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .pomodoro-count .dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--work-color);
+        }
+
+        .pomodoro-count .dot.completed {
+            opacity: 1;
+        }
+
+        .pomodoro-count .dot.pending {
+            opacity: 0.2;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 14px 36px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 1px;
+        }
+
+        .btn:active {
+            transform: scale(0.96);
+        }
+
+        .btn-start {
+            background: var(--work-color);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.35);
+        }
+
+        .btn-start:hover {
+            background: #c0392b;
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.45);
+        }
+
+        .btn-start.paused {
+            background: #3498db;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.35);
+        }
+
+        .btn-start.paused:hover {
+            background: #2980b9;
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.45);
+        }
+
+        .btn-reset {
+            background: #fff;
+            color: var(--text-secondary);
+            border: 2px solid #ecf0f1;
+        }
+
+        .btn-reset:hover {
+            background: #f8f9fa;
+            border-color: #bdc3c7;
+            color: var(--text);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card" id="card">
+        <div class="status" id="status">工作中</div>
+
+        <div class="timer-ring-wrapper">
+            <svg class="timer-ring" viewBox="0 0 260 260">
+                <circle class="ring-bg" cx="130" cy="130" r="120" />
+                <circle class="ring-progress" id="ring" cx="130" cy="130" r="120"
+                    stroke-dasharray="753.98"
+                    stroke-dashoffset="0" />
+            </svg>
+            <div class="time-display" id="time">25:00</div>
+        </div>
+
+        <div class="pomodoro-count" id="count">
+            <span>完成 </span>
+            <span id="countValue">0</span>
+            <span> 个番茄</span>
+        </div>
+
+        <div class="buttons">
+            <button class="btn btn-start" id="btnStart" onclick="toggleTimer()">开始</button>
+            <button class="btn btn-reset" id="btnReset" onclick="resetTimer()">重置</button>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 配置 ====================
+        const WORK_MINUTES = 25;
+        const BREAK_MINUTES = 5;
+        const CIRCUMFERENCE = 2 * Math.PI * 120; // 圆环周长 = 753.98
+
+        // ==================== 状态 ====================
+        const PHASE = { WORK: "work", BREAK: "break" };
+
+        let state = {
+            phase: PHASE.WORK,
+            remainingSeconds: WORK_MINUTES * 60,
+            totalSeconds: WORK_MINUTES * 60,
+            completedPomodoros: 0,
+            intervalId: null,
+            isRunning: false,
+        };
+
+        // ==================== DOM 引用 ====================
+        const cardEl = document.getElementById("card");
+        const statusEl = document.getElementById("status");
+        const timeEl = document.getElementById("time");
+        const ringEl = document.getElementById("ring");
+        const countValueEl = document.getElementById("countValue");
+        const btnStartEl = document.getElementById("btnStart");
+        const btnResetEl = document.getElementById("btnReset");
+
+        // ==================== 工具函数 ====================
+        function formatTime(totalSeconds) {
+            const mins = Math.floor(totalSeconds / 60);
+            const secs = totalSeconds % 60;
+            return String(mins).padStart(2, "0") + ":" + String(secs).padStart(2, "0");
+        }
+
+        function updateRing() {
+            const fraction = state.remainingSeconds / state.totalSeconds;
+            const offset = CIRCUMFERENCE * (1 - fraction);
+            ringEl.setAttribute("stroke-dashoffset", offset);
+        }
+
+        // ==================== 声音提醒 ====================
+        function playSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+                notes.forEach((freq, i) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = "sine";
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime + i * 0.15);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + i * 0.15 + 0.3);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(audioCtx.currentTime + i * 0.15);
+                    osc.stop(audioCtx.currentTime + i * 0.15 + 0.3);
+                });
+            } catch (e) {
+                // 静默处理不支持 Web Audio 的浏览器
+            }
+        }
+
+        // ==================== UI 更新 ====================
+        function updateUI() {
+            timeEl.textContent = formatTime(state.remainingSeconds);
+            updateRing();
+
+            if (state.phase === PHASE.WORK) {
+                cardEl.className = "card working";
+                statusEl.className = "status working";
+                statusEl.textContent = "工作中";
+                ringEl.className = "ring-progress";
+                btnStartEl.className = "btn btn-start";
+            } else {
+                cardEl.className = "card breaking";
+                statusEl.className = "status breaking";
+                statusEl.textContent = "休息中";
+                ringEl.className = "ring-progress breaking";
+                btnStartEl.className = "btn btn-start";
+            }
+
+            if (state.isRunning) {
+                btnStartEl.textContent = "暂停";
+                btnStartEl.classList.add("paused");
+            } else {
+                btnStartEl.textContent = "开始";
+                btnStartEl.classList.remove("paused");
+            }
+        }
+
+        // ==================== 阶段切换 ====================
+        function switchPhase() {
+            playSound();
+
+            if (state.phase === PHASE.WORK) {
+                // 工作结束 → 进入休息
+                state.completedPomodoros++;
+                countValueEl.textContent = state.completedPomodoros;
+                state.phase = PHASE.BREAK;
+                state.totalSeconds = BREAK_MINUTES * 60;
+                state.remainingSeconds = BREAK_MINUTES * 60;
+            } else {
+                // 休息结束 → 进入工作
+                state.phase = PHASE.WORK;
+                state.totalSeconds = WORK_MINUTES * 60;
+                state.remainingSeconds = WORK_MINUTES * 60;
+            }
+
+            updateUI();
+        }
+
+        // ==================== 计时器 ====================
+        function tick() {
+            state.remainingSeconds--;
+            updateUI();
+
+            if (state.remainingSeconds <= 0) {
+                clearInterval(state.intervalId);
+                state.intervalId = null;
+                state.isRunning = false;
+                switchPhase();
+
+                // 自动开始下一阶段
+                startTimer();
+            }
+        }
+
+        function startTimer() {
+            if (state.intervalId) return;
+            state.isRunning = true;
+            updateUI();
+            state.intervalId = setInterval(tick, 1000);
+        }
+
+        function pauseTimer() {
+            if (state.intervalId) {
+                clearInterval(state.intervalId);
+                state.intervalId = null;
+            }
+            state.isRunning = false;
+            updateUI();
+        }
+
+        function toggleTimer() {
+            if (state.isRunning) {
+                pauseTimer();
+            } else {
+                startTimer();
+            }
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            state.phase = PHASE.WORK;
+            state.totalSeconds = WORK_MINUTES * 60;
+            state.remainingSeconds = WORK_MINUTES * 60;
+            updateUI();
+        }
+
+        // ==================== 初始化 ====================
+        ringEl.setAttribute("stroke-dasharray", CIRCUMFERENCE);
+        ringEl.setAttribute("stroke-dashoffset", "0");
+        updateUI();
+    </script>
+</body>
+</html>
