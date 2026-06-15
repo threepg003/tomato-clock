@@ -193,39 +193,223 @@
             border-color: #bdc3c7;
             color: var(--text);
         }
+
+        .duration-controls {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .duration-field {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            user-select: none;
+        }
+
+        .duration-field label {
+            font-weight: 600;
+        }
+
+        .duration-field input[type="number"] {
+            width: 56px;
+            padding: 6px 8px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            text-align: center;
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .duration-field input[type="number"]:focus {
+            border-color: var(--work-color);
+        }
+
+        .duration-field input[type="number"]:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ==================== 双栏容器 ==================== */
+        .container {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 30px;
+        }
+
+        /* ==================== 说明书面板 ==================== */
+        .instructions {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 36px 32px;
+            width: 340px;
+            text-align: left;
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--text);
+        }
+
+        .instructions h2 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--work-color);
+            color: var(--work-color);
+            letter-spacing: 2px;
+        }
+
+        .instructions h3 {
+            font-size: 15px;
+            font-weight: 600;
+            margin: 18px 0 8px;
+            color: var(--text);
+        }
+
+        .instructions h3:first-of-type {
+            margin-top: 0;
+        }
+
+        .instructions p {
+            margin-bottom: 6px;
+            color: var(--text-secondary);
+        }
+
+        .instructions kbd {
+            display: inline-block;
+            padding: 2px 8px;
+            font-size: 12px;
+            font-family: "SF Mono", "Fira Code", Consolas, monospace;
+            background: var(--bg);
+            border: 1px solid #dcdde1;
+            border-radius: 4px;
+            line-height: 1.6;
+        }
+
+        .instructions ul {
+            list-style: none;
+            padding: 0;
+            margin: 6px 0 0;
+        }
+
+        .instructions li {
+            padding: 4px 0 4px 20px;
+            position: relative;
+            color: var(--text-secondary);
+        }
+
+        .instructions li::before {
+            content: "•";
+            position: absolute;
+            left: 4px;
+            color: var(--work-color);
+            font-weight: bold;
+        }
+
+        .instructions .note {
+            background: var(--work-light);
+            border-left: 3px solid var(--work-color);
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-top: 14px;
+            font-size: 13px;
+            color: var(--text);
+        }
+
+        .instructions .note strong {
+            color: var(--work-color);
+        }
     </style>
 </head>
 <body>
 
-    <div class="card" id="card">
-        <div class="status" id="status">工作中</div>
+    <div class="container">
 
-        <div class="timer-ring-wrapper">
-            <svg class="timer-ring" viewBox="0 0 260 260">
-                <circle class="ring-bg" cx="130" cy="130" r="120" />
-                <circle class="ring-progress" id="ring" cx="130" cy="130" r="120"
-                    stroke-dasharray="753.98"
-                    stroke-dashoffset="0" />
-            </svg>
-            <div class="time-display" id="time">25:00</div>
+        <div class="card" id="card">
+            <div class="status" id="status">工作中</div>
+
+            <div class="timer-ring-wrapper">
+                <svg class="timer-ring" viewBox="0 0 260 260">
+                    <circle class="ring-bg" cx="130" cy="130" r="120" />
+                    <circle class="ring-progress" id="ring" cx="130" cy="130" r="120"
+                        stroke-dasharray="753.98"
+                        stroke-dashoffset="0" />
+                </svg>
+                <div class="time-display" id="time">25:00</div>
+            </div>
+
+            <div class="pomodoro-count" id="count">
+                <span>完成 </span>
+                <span id="countValue">0</span>
+                <span> 个番茄</span>
+            </div>
+
+            <div class="duration-controls">
+                <div class="duration-field">
+                    <label>工作</label>
+                    <input type="number" id="workDuration" value="25" min="1" max="180">
+                    <span>分</span>
+                </div>
+                <div class="duration-field">
+                    <label>休息</label>
+                    <input type="number" id="breakDuration" value="5" min="1" max="120">
+                    <span>分</span>
+                </div>
+            </div>
+
+            <div class="buttons">
+                <button class="btn btn-start" id="btnStart" onclick="toggleTimer()">开始</button>
+                <button class="btn btn-reset" id="btnReset" onclick="resetTimer()">重置</button>
+            </div>
         </div>
 
-        <div class="pomodoro-count" id="count">
-            <span>完成 </span>
-            <span id="countValue">0</span>
-            <span> 个番茄</span>
+        <div class="instructions">
+            <h2>📖 使用说明</h2>
+
+            <h3>🍅 番茄工作法</h3>
+            <p>专注工作 25 分钟，休息 5 分钟，每完成 4 个番茄后可长休息。按此循环提升效率。</p>
+
+            <h3>🕹️ 基本操作</h3>
+            <ul>
+                <li><kbd>开始</kbd> — 启动计时器，开始倒计时</li>
+                <li><kbd>暂停</kbd> — 暂停当前计时（点击开始按钮切换）</li>
+                <li><kbd>重置</kbd> — 重置为工作模式，从头开始</li>
+            </ul>
+
+            <h3>⏱️ 自定义时长</h3>
+            <p>计时器未运行时，可直接修改「工作」和「休息」的分钟数（1-180 分）。运行时输入框会自动禁用。</p>
+
+            <h3>🔔 通知提醒</h3>
+            <p>阶段切换时有声音提示，并弹出浏览器通知（需授权）。</p>
+            <p>如未收到通知，点击地址栏左侧 <kbd>🔒</kbd> 图标 → 将「通知」改为允许。</p>
+
+            <h3>⌨️ 快捷键</h3>
+            <ul>
+                <li><kbd>Space</kbd> — 开始 / 暂停</li>
+                <li><kbd>R</kbd> — 重置</li>
+            </ul>
+
+            <div class="note">
+                <strong>💡 提示：</strong>每完成一个工作阶段，下方会累计番茄数量。保持节奏，效率翻倍！
+            </div>
         </div>
 
-        <div class="buttons">
-            <button class="btn btn-start" id="btnStart" onclick="toggleTimer()">开始</button>
-            <button class="btn btn-reset" id="btnReset" onclick="resetTimer()">重置</button>
-        </div>
     </div>
 
     <script>
         // ==================== 配置 ====================
-        const WORK_MINUTES = 25;
-        const BREAK_MINUTES = 5;
+        const DEFAULT_WORK_MINUTES = 25;
+        const DEFAULT_BREAK_MINUTES = 5;
         const CIRCUMFERENCE = 2 * Math.PI * 120; // 圆环周长 = 753.98
 
         // ==================== 状态 ====================
@@ -233,8 +417,10 @@
 
         let state = {
             phase: PHASE.WORK,
-            remainingSeconds: WORK_MINUTES * 60,
-            totalSeconds: WORK_MINUTES * 60,
+            remainingSeconds: DEFAULT_WORK_MINUTES * 60,
+            totalSeconds: DEFAULT_WORK_MINUTES * 60,
+            workDuration: DEFAULT_WORK_MINUTES,
+            breakDuration: DEFAULT_BREAK_MINUTES,
             completedPomodoros: 0,
             intervalId: null,
             isRunning: false,
@@ -248,6 +434,8 @@
         const countValueEl = document.getElementById("countValue");
         const btnStartEl = document.getElementById("btnStart");
         const btnResetEl = document.getElementById("btnReset");
+        const workDurationInput = document.getElementById("workDuration");
+        const breakDurationInput = document.getElementById("breakDuration");
 
         // ==================== 工具函数 ====================
         function formatTime(totalSeconds) {
@@ -312,22 +500,33 @@
             }
         }
 
+        // ==================== 浏览器通知 ====================
+        function sendNotification() {
+            if (!("Notification" in window) || Notification.permission !== "granted") return;
+            const title = state.phase === PHASE.WORK ? "🍅 工作完成啦！" : "☕ 休息结束啦！";
+            const body = state.phase === PHASE.WORK
+                ? `已累计完成 ${state.completedPomodoros} 个番茄`
+                : "准备进入下一个番茄！";
+            new Notification(title, { body });
+        }
+
         // ==================== 阶段切换 ====================
         function switchPhase() {
             playSound();
+            sendNotification();
 
             if (state.phase === PHASE.WORK) {
                 // 工作结束 → 进入休息
                 state.completedPomodoros++;
                 countValueEl.textContent = state.completedPomodoros;
                 state.phase = PHASE.BREAK;
-                state.totalSeconds = BREAK_MINUTES * 60;
-                state.remainingSeconds = BREAK_MINUTES * 60;
+                state.totalSeconds = state.breakDuration * 60;
+                state.remainingSeconds = state.breakDuration * 60;
             } else {
                 // 休息结束 → 进入工作
                 state.phase = PHASE.WORK;
-                state.totalSeconds = WORK_MINUTES * 60;
-                state.remainingSeconds = WORK_MINUTES * 60;
+                state.totalSeconds = state.workDuration * 60;
+                state.remainingSeconds = state.workDuration * 60;
             }
 
             updateUI();
@@ -369,22 +568,75 @@
             if (state.isRunning) {
                 pauseTimer();
             } else {
+                syncDurations();
                 startTimer();
             }
         }
 
+        function syncDurations() {
+            const w = parseInt(workDurationInput.value, 10);
+            const b = parseInt(breakDurationInput.value, 10);
+            if (w > 0 && !isNaN(w)) state.workDuration = w;
+            if (b > 0 && !isNaN(b)) state.breakDuration = b;
+        }
+
         function resetTimer() {
             pauseTimer();
+            syncDurations();
             state.phase = PHASE.WORK;
-            state.totalSeconds = WORK_MINUTES * 60;
-            state.remainingSeconds = WORK_MINUTES * 60;
+            state.totalSeconds = state.workDuration * 60;
+            state.remainingSeconds = state.workDuration * 60;
             updateUI();
         }
 
         // ==================== 初始化 ====================
         ringEl.setAttribute("stroke-dasharray", CIRCUMFERENCE);
         ringEl.setAttribute("stroke-dashoffset", "0");
+
+        // 请求通知权限
+        if ("Notification" in window && Notification.permission === "default") {
+            Notification.requestPermission();
+        }
+
+        // 运行时禁用时长输入
+        function setInputsDisabled(disabled) {
+            workDurationInput.disabled = disabled;
+            breakDurationInput.disabled = disabled;
+        }
+
+        // 覆盖 startTimer / pauseTimer 以控制输入框状态
+        const _origStart = startTimer;
+        const _origPause = pauseTimer;
+        startTimer = function () {
+            _origStart();
+            setInputsDisabled(true);
+        };
+        pauseTimer = function () {
+            _origPause();
+            setInputsDisabled(false);
+        };
+
+        // 输入框变化时同步状态（未运行时）
+        workDurationInput.addEventListener("change", () => {
+            if (!state.isRunning) syncDurations();
+        });
+        breakDurationInput.addEventListener("change", () => {
+            if (!state.isRunning) syncDurations();
+        });
+
+        syncDurations();
         updateUI();
+
+        // ==================== 键盘快捷键 ====================
+        document.addEventListener("keydown", (e) => {
+            if (e.target.tagName === "INPUT") return; // 输入框中不触发
+            if (e.key === " " || e.code === "Space") {
+                e.preventDefault();
+                toggleTimer();
+            } else if (e.key === "r" || e.key === "R") {
+                resetTimer();
+            }
+        });
     </script>
 </body>
 </html>
